@@ -1,0 +1,17 @@
+/* Validates user input on the grid before saving.
+   Iterates through edited cells to check for negative values.
+*/
+
+// Iterate over edited cells only
+operation.grid.dataCellIterator({it.edited}).each { cell ->
+
+    // Check if the cell value is negative
+    if(cell.data < 0) {
+        
+        // Retrieve the Account name for the error message
+        String sAccount = cell.getMemberName("Account")
+        
+        // Throw exception to block the save operation and display the error to the user
+        throwVetoException("Input Error: Negative values are not allowed for account: ${sAccount}. You entered: ${cell.data}")
+    }
+}
