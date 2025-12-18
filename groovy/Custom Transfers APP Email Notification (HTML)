@@ -1,0 +1,62 @@
+/* Sends an HTML email notification confirming a Budget Journal creation.
+   Uses Dynamic Invocation to bypass strict compiler type checks.
+*/
+
+// --- 1. Define Context Variables ---
+String journalId = "GL-2025-00129"
+String glDate    = "2025-12-18"
+double amount    = 50000.00
+String sourceCC  = "CC_100 (IT)"
+String targetCC  = "CC_200 (Marketing)"
+
+// --- 2. Retrieve User Email Dynamically ---
+// We cast to GroovyObject and use invokeMethod to bypass the "No such property" error
+GroovyObject userObj = (GroovyObject) operation.user
+String userEmail = (String) userObj.invokeMethod("getEmail", [] as Object[])
+
+// --- 3. Construct HTML Body ---
+String htmlBody = """
+<html>
+<body style="font-family: Arial, sans-serif;">
+    <h3 style="color: #2c3e50;">Action Required: Budget Transfer Finalized</h3>
+    <p>The budget transfer request has been approved and the corresponding journal is created in the ERP General Ledger.</p>
+    
+    <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 600px; border-color: #ddd;">
+        <tr style="background-color: #f2f2f2; text-align: left;">
+            <th>ERP Journal ID</th>
+            <th>GL Date</th>
+            <th>Source Dept</th>
+            <th>Target Dept</th>
+            <th>Amount</th>
+        </tr>
+        <tr>
+            <td>${journalId}</td>
+            <td>${glDate}</td>
+            <td>${sourceCC}</td>
+            <td>${targetCC}</td>
+            <td style="text-align: right; font-weight: bold;">${amount}</td>
+        </tr>
+    </table>
+    
+    <p>Status: <b style="color: green;">POSTED</b></p>
+</body>
+</html>
+"""
+
+// --- 4. Send Email Dynamically ---
+if (userEmail) {
+    println("Sending confirmation email to: " + userEmail)
+    
+    // Cast Application to GroovyObject
+    GroovyObject appObj = (GroovyObject) operation.application
+    
+    // Prepare arguments for sendMail: [Subject, Body, To, Cc, Bcc, Attachments]
+    // We pass 'null' explicitly in the object array
+    Object[] mailArgs = ["Notification: GL Journal Created - ${journalId}", htmlBody, userEmail, null, null, null]
+    
+    // Invoke sendMail dynamically
+    appObj.invokeMethod("sendMail", mailArgs)
+    
+} else {
+    println("Current user does not have an email address configured. Notification skipped.")
+}
