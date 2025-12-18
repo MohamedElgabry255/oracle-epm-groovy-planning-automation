@@ -1,0 +1,37 @@
+/* Copies data from Actual to a target Scenario/Version with a 5% uplift.
+   Uses invokeMethod to bypass strict compiler checks and restricted imports.
+*/
+
+final String RTP_ENTITY     = "rtp_Entity"
+final String RTP_COSTCENTRE = "rtp_CostCentre"
+final String RTP_YEARS      = "rtp_Years"
+final String RTP_SCENARIO   = "rtp_Scenario"
+final String RTP_VERSION    = "rtp_Version"
+
+String sourceScenario = "Actual"
+String sourceVersion  = "Final"
+
+// Retrieve member names
+String sEntity     = rtps.get(RTP_ENTITY).getMember().getName()
+String sCostCentre = rtps.get(RTP_COSTCENTRE).getMember().getName()
+String sYears      = rtps.get(RTP_YEARS).getMember().getName()
+String sTargetScen = rtps.get(RTP_SCENARIO).getMember().getName()
+String sTargetVer  = rtps.get(RTP_VERSION).getMember().getName()
+
+// Construct script
+String sCalcScript = """
+    FIX("${sEntity}", "${sCostCentre}", "${sYears}", "Period")
+        "${sTargetScen}"->"${sTargetVer}" = "${sourceScenario}"->"${sourceVersion}" * 1.05;
+    ENDFIX
+""".toString()
+
+println("Seeding data from ${sourceScenario} to ${sTargetScen} with 5% uplift.")
+
+// 1. Get the Cube
+GroovyObject cube = (GroovyObject) operation.application.getCube("PBCS1")
+
+// 2. Create Script dynamically
+GroovyObject script = (GroovyObject) cube.invokeMethod("createCalcScript", [sCalcScript] as Object[])
+
+// 3. Execute dynamically
+script.invokeMethod("execute", [] as Object[])
