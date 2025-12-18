@@ -1,5 +1,4 @@
 /* Copies data from Actual to a target Scenario/Version with a 5% uplift.
-   Uses invokeMethod to bypass strict compiler checks and restricted imports.
 */
 
 final String RTP_ENTITY     = "rtp_Entity"
